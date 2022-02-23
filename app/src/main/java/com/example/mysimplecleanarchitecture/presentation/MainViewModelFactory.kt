@@ -1,0 +1,35 @@
+package com.example.mysimplecleanarchitecture.presentation
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.example.mysimplecleanarchitecture.di.Injection
+import com.example.mysimplecleanarchitecture.domain.MessageUseCase
+
+class MainViewModelFactory (
+        private var messageUseCase: MessageUseCase
+    ) : ViewModelProvider.NewInstanceFactory() {
+
+    /*
+     * kelas ini digunakan untuk menginisiasi ViewModel yang memiliki parameter
+     * Namun karena kelas ini nanti memerlukan kelas MessageUseCase, maka kita perlu membuat
+       sebuah kelas untuk inject MessageUseCase ke dalam ViewModelFactory => Injection
+     */
+
+    companion object {
+            @Volatile
+            private var instance: MainViewModelFactory? = null
+
+            fun getInstance(): MainViewModelFactory =
+                instance ?: synchronized(this) {
+                    instance ?: MainViewModelFactory(Injection.provideUseCase())
+                }
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return when {
+                modelClass.isAssignableFrom(MainViewModel::class.java) -> MainViewModel(messageUseCase) as T
+                else -> throw IllegalArgumentException("Unknown ViewModel class: " + modelClass.name)
+            }
+        }
+    }
